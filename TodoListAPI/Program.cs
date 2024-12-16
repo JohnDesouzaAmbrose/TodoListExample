@@ -3,6 +3,7 @@ using JsonApiDotNetCore.Configuration;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.OpenApi.Models;
 using TodoListAPI.Data;
 using TodoListAPI.Models;
 
@@ -52,13 +53,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 
 builder.Services.AddOpenIddict()
 
-    // Register the OpenIddict core components.
+// Register the OpenIddict core components.
     .AddCore(options =>
     {
         // Configure OpenIddict to use the Entity Framework Core stores and models.
         options.UseEntityFrameworkCore().UseDbContext<AppDbContext>();
     })
-
+    
     // Register the OpenIddict server components.
     .AddServer(options =>
     {
@@ -97,6 +98,12 @@ builder.Services.AddOpenIddict()
         options.UseAspNetCore();
     });
 
+// Register the Swagger generator, defining 1 or more Swagger documents
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "TodoListAPI", Version = "v1" });
+});
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -105,7 +112,18 @@ if (builder.Environment.IsDevelopment())
 {
     app.UseCors(policy =>
     {
-        policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+        policy.WithOrigins("http://localhost:5000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    });
+
+    // Enable middleware to serve generated Swagger as a JSON endpoint.
+    app.UseSwagger();
+
+    // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+    // specifying the Swagger JSON endpoint.
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TodoListAPI v1");
+        c.RoutePrefix = string.Empty; // To serve the Swagger UI at the app's root (http://localhost:<port>/)
     });
 }
 
